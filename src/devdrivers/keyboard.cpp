@@ -207,7 +207,9 @@ char const * Keyboard::virtualKeyToString(VirtualKey virtualKey)
                              "VK_UMLAUT_e", "VK_UMLAUT_A", "VK_UMLAUT_E", "VK_UMLAUT_I", "VK_UMLAUT_O", "VK_UMLAUT_U", "VK_CARET_a", "VK_CARET_e", "VK_CARET_i", "VK_CARET_o", "VK_CARET_u", "VK_CARET_A", "VK_CARET_E",
                              "VK_CARET_I", "VK_CARET_O", "VK_CARET_U", "VK_ASCII",
                           };
-  return VKTOSTR[virtualKey];
+  if ( virtualKey < VK_LAST )
+    return VKTOSTR[virtualKey];
+  return ">=VK_LAST";
 }
 #endif
 
@@ -531,7 +533,7 @@ int Keyboard::virtualKeyToASCII(VirtualKey virtualKey)
 
     case VK_CARET_U:   // 'Û'
       return 0XDB;
-		
+
     default:
       return -1;
   }
@@ -767,15 +769,22 @@ bool Keyboard::blockingGetVirtualKey(VirtualKeyItem * item)
       item->vk = VK_NONE;
     }
   }
-  if (item->vk != m_lastDeadKey && item->vk != VK_NONE) {
+
+  if (item->vk != m_lastDeadKey && item->vk != VK_NONE && m_lastDeadKey != VK_NONE
+  	  && item->vk != VK_LCTRL && item->vk != VK_RCTRL
+  	  && item->vk != VK_LALT && item->vk != VK_RALT
+  	  && item->vk != VK_LSHIFT && item->vk != VK_RSHIFT ) {
+
     for (DeadKeyVirtualKeyDef const * dk = m_layout->deadkeysToVK; dk->deadKey != VK_NONE; ++dk) {
       if (item->vk == dk->reqVirtualKey && m_lastDeadKey == dk->deadKey) {
         item->vk = dk->virtualKey;
         break;
       }
     }
-    if (!item->down && (item->vk != m_lastDeadKey) && (item->vk != VK_RSHIFT) && (item->vk != VK_LSHIFT))
+
+    if (!item->down ) {
       m_lastDeadKey = VK_NONE;
+    }
   }
 
   // ending zero to item->scancode
