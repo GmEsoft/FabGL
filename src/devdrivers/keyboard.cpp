@@ -33,6 +33,63 @@
 
 #pragma GCC optimize ("O2")
 
+#include "HardwareSerial.h"
+
+// DEBUG PRINT
+const int debugActive = 1;
+
+template < typename T >
+inline void serialPrintOne( T t ) // Generic argument
+{
+	Serial.print( t );
+}
+
+template < typename T >
+inline void serialPrintOne( const T *t ) // Generic pointer -> hex
+{
+	Serial.print( "0x" );
+	Serial.print( (long)t, HEX );
+}
+
+template <>
+inline void serialPrintOne( void *t ) // Void pointer -> hex
+{
+	Serial.print( "0x" );
+	Serial.print( (long)t, HEX );
+}
+
+template <>
+inline void serialPrintOne( const char *t ) // Literal string
+{
+	Serial.print( t );
+}
+
+template < typename ... Tlist >
+void serialPrint( Tlist... list );
+
+template < typename T, typename ... Tlist >
+inline void serialPrint( T t, Tlist... list )
+{
+	serialPrintOne( t );
+	serialPrint( list... );
+}
+
+template <>
+inline void serialPrint()
+{
+	Serial.println();
+}
+
+template < typename ... Tlist >
+inline void debugPrint( Tlist... list )
+{
+	if ( debugActive )
+		serialPrint( "DEBUG: ", list... );
+}
+
+// END DEBUG PRINT
+
+
 
 namespace fabgl {
 
@@ -182,6 +239,7 @@ int Keyboard::getNextScancode(int timeOutMS, bool requestResendOnTimeOut)
 
 void Keyboard::setLayout(const KeyboardLayout * layout)
 {
+  debugPrint( "setLayout: ", layout, " = ", layout->name );
   m_layout = layout;
 }
 
@@ -765,6 +823,7 @@ bool Keyboard::blockingGetVirtualKey(VirtualKeyItem * item)
   // manage dead keys - Implemented by Carles Oriol (https://github.com/carlesoriol)
   for (VirtualKey const * dk = m_layout->deadKeysVK; *dk != VK_NONE; ++dk) {
     if (item->vk == *dk) {
+      debugPrint( m_layout->name, ": Dead key found: ", virtualKeyToString(item->vk) );
       m_lastDeadKey = item->vk;
       item->vk = VK_NONE;
     }
@@ -775,14 +834,30 @@ bool Keyboard::blockingGetVirtualKey(VirtualKeyItem * item)
   	  && item->vk != VK_LALT && item->vk != VK_RALT
   	  && item->vk != VK_LSHIFT && item->vk != VK_RSHIFT ) {
 
+	debugPrint(
+	  m_layout->name, ": Testing dead keys for ( ", m_lastDeadKey, ", ", item->vk,
+	  " ) - ( ", virtualKeyToString(m_lastDeadKey), ", ", virtualKeyToString(item->vk),
+	  " )"
+	);
+
     for (DeadKeyVirtualKeyDef const * dk = m_layout->deadkeysToVK; dk->deadKey != VK_NONE; ++dk) {
+	debugPrint(
+	  m_layout->name, ": Testing ( ", dk->deadKey, ", ", dk->reqVirtualKey,
+	  " ) - ( " , virtualKeyToString(dk->deadKey), ", ", virtualKeyToString(dk->reqVirtualKey),
+	  " )"
+	);
+
       if (item->vk == dk->reqVirtualKey && m_lastDeadKey == dk->deadKey) {
+	    debugPrint( m_layout->name, ": Found -> " ,dk->virtualKey, " - " ,virtualKeyToString(dk->virtualKey) );
         item->vk = dk->virtualKey;
         break;
       }
     }
 
-    if (!item->down ) {
+	debugPrint( m_layout->name, ": End Testing" );
+
+    if (!item->down) {
+	  debugPrint( m_layout->name, ": Clearing last dead key: ", virtualKeyToString(m_lastDeadKey) );
       m_lastDeadKey = VK_NONE;
     }
   }
