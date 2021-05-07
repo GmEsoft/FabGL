@@ -51,6 +51,16 @@ Keyboard::Keyboard()
 }
 
 
+Keyboard::~Keyboard()
+{
+  PS2DeviceLock lock(this);
+  if (m_SCodeToVKConverterTask)
+    vTaskDelete(m_SCodeToVKConverterTask);
+  if (m_virtualKeyQueue)
+    vQueueDelete(m_virtualKeyQueue);
+}
+
+
 void Keyboard::begin(bool generateVirtualKeys, bool createVKQueue, int PS2Port)
 {
   PS2Device::begin(PS2Port);
@@ -85,9 +95,8 @@ void Keyboard::begin(bool generateVirtualKeys, bool createVKQueue, int PS2Port)
 
 void Keyboard::begin(gpio_num_t clkGPIO, gpio_num_t dataGPIO, bool generateVirtualKeys, bool createVKQueue)
 {
-  PS2Controller * PS2 = PS2Controller::instance();
-  PS2->begin(clkGPIO, dataGPIO);
-  PS2->setKeyboard(this);
+  PS2Controller::begin(clkGPIO, dataGPIO);
+  PS2Controller::setKeyboard(this);
   begin(generateVirtualKeys, createVKQueue, 0);
 }
 
@@ -107,6 +116,8 @@ bool Keyboard::reset()
       break;
     vTaskDelay(500 / portTICK_PERIOD_MS);
   }
+  // give the time to the device to be fully initialized
+  vTaskDelay(200 / portTICK_PERIOD_MS);
 
   return m_keyboardAvailable;
 }

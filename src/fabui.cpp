@@ -199,12 +199,12 @@ int uiApp::run(BitmappedDisplayController * displayController, Keyboard * keyboa
 
   m_keyboard = keyboard;
   m_mouse    = mouse;
-  if (PS2Controller::instance()) {
+  if (PS2Controller::initialized()) {
     // get default keyboard and mouse from the PS/2 controller
     if (m_keyboard == nullptr)
-      m_keyboard = PS2Controller::instance()->keyboard();
+      m_keyboard = PS2Controller::keyboard();
     if (m_mouse == nullptr)
-      m_mouse = PS2Controller::instance()->mouse();
+      m_mouse = PS2Controller::mouse();
   }
 
   m_eventsQueue = xQueueCreate(FABGLIB_UI_EVENTS_QUEUE_SIZE, sizeof(uiEvent));
@@ -3646,7 +3646,12 @@ void uiCustomListBox::processEvent(uiEvent * event)
 
     case UIEVT_MOUSEBUTTONDOWN:
       if (event->params.mouse.changedButton == 1)
-        handleMouseDown(event->params.mouse.status.X, event->params.mouse.status.Y);
+        mouseDownSelect(event->params.mouse.status.X, event->params.mouse.status.Y);
+      break;
+
+    case UIEVT_MOUSEMOVE:
+      if (m_listBoxProps.selectOnMouseOver)
+        mouseMoveSelect(event->params.mouse.status.X, event->params.mouse.status.Y);
       break;
 
     case UIEVT_KEYDOWN:
@@ -3716,9 +3721,9 @@ void uiCustomListBox::selectItem(int index, bool add, bool range)
   if (items_getCount() > 0) {
     index = iclamp(index, 0, items_getCount() - 1);
     int first = firstSelectedItem();
-    if (!add)
+    if (!add || !m_listBoxProps.allowMultiSelect)
       items_deselectAll();
-    if (range) {
+    if (m_listBoxProps.allowMultiSelect && range) {
       if (index <= first) {
         for (int i = index; i <= first; ++i)
           items_select(i, true);
@@ -3852,13 +3857,20 @@ int uiCustomListBox::getItemAtMousePos(int mouseX, int mouseY)
 }
 
 
-void uiCustomListBox::handleMouseDown(int mouseX, int mouseY)
+void uiCustomListBox::mouseDownSelect(int mouseX, int mouseY)
 {
   int idx = getItemAtMousePos(mouseX, mouseY);
   if (idx >= 0) {
     if (app()->keyboard()->isVKDown(VK_LCTRL) || app()->keyboard()->isVKDown(VK_RCTRL)) {
       // CTRL is down
-      items_select(idx, !items_selected(idx));
+      bool wasSelected = items_selected(idx);
+      if (m_listBoxProps.allowMultiSelect) {
+        items_select(idx, !wasSelected);
+      } else {
+        items_deselectAll();
+        if (!wasSelected)
+          items_select(idx, true);
+      }
     } else {
       // CTRL is up
       items_deselectAll();
@@ -3870,6 +3882,18 @@ void uiCustomListBox::handleMouseDown(int mouseX, int mouseY)
     return;
   onChange();
   repaint();
+}
+
+
+void uiCustomListBox::mouseMoveSelect(int mouseX, int mouseY)
+{
+  int idx = getItemAtMousePos(mouseX, mouseY);
+  if (idx >= 0 && !items_selected(idx)) {
+    items_deselectAll();
+    items_select(idx, true);
+    onChange();
+    repaint();
+  }
 }
 
 
@@ -4681,6 +4705,88 @@ void uiSlider::handleKeyDown(uiKeyEventInfo key)
 // uiSlider
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// uiProgressBar
+
+
+uiProgressBar::uiProgressBar(uiWindow * parent, const Point & pos, const Size & size, bool visible, uint32_t styleClassID)
+  : uiControl(parent, pos, size, visible, 0)
+{
+  objectType().uiProgressBar = true;
+
+  windowProps().focusable = false;
+  windowStyle().borderSize = 1;
+  windowStyle().borderColor = RGB888(64, 64, 64);
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
+
+  m_percentage = 0;
+}
+
+
+uiProgressBar::~uiProgressBar()
+{
+}
+
+
+void uiProgressBar::paintProgressBar()
+{
+  Rect cRect = uiControl::clientRect(uiOrigin::Window);
+
+  int splitPos = cRect.width() * m_percentage / 100;
+  Rect fRect = Rect(cRect.X1, cRect.Y1, cRect.X1 + splitPos, cRect.Y2);
+  Rect bRect = Rect(cRect.X1 + splitPos + 1, cRect.Y1, cRect.X2, cRect.Y2);
+
+  // the bar
+  canvas()->setBrushColor(m_progressBarStyle.foregroundColor);
+  canvas()->fillRectangle(fRect);
+  canvas()->setBrushColor(m_progressBarStyle.backgroundColor);
+  canvas()->fillRectangle(bRect);
+
+  if (m_progressBarProps.showPercentage) {
+    char txt[5];
+    sprintf(txt, "%d%%", m_percentage);
+    canvas()->setGlyphOptions(GlyphOptions().FillBackground(false).DoubleWidth(0).Bold(false).Italic(false).Underline(false).Invert(0));
+    canvas()->setPenColor(m_progressBarStyle.textColor);
+    int x = fRect.X2 - canvas()->textExtent(m_progressBarStyle.textFont, txt);
+    int y = cRect.Y1 + (cRect.height() - m_progressBarStyle.textFont->height) / 2;
+    canvas()->drawText(m_progressBarStyle.textFont, x, y, txt);
+  }
+}
+
+
+void uiProgressBar::processEvent(uiEvent * event)
+{
+  uiControl::processEvent(event);
+
+  switch (event->id) {
+
+    case UIEVT_PAINT:
+      beginPaint(event, uiControl::clientRect(uiOrigin::Window));
+      paintProgressBar();
+      break;
+
+    default:
+      break;
+  }
+}
+
+
+void uiProgressBar::setPercentage(int value)
+{
+  value = imin(imax(0, value), 100);
+  if (value != m_percentage) {
+    m_percentage = value;
+    repaint();
+  }
+}
+
+
+// uiProgressBar
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
