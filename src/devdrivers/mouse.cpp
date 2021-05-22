@@ -41,6 +41,7 @@ Mouse::Mouse()
   : m_mouseAvailable(false),
     m_mouseType(LegacyMouse),
     m_mouseUpdateTask(nullptr),
+    m_receivedPacket(nullptr),
     m_absoluteUpdate(false),
     m_prevDeltaTime(0),
     m_movementAcceleration(180),
@@ -54,9 +55,12 @@ Mouse::Mouse()
 
 Mouse::~Mouse()
 {
+  PS2DeviceLock lock(this);
   terminateAbsolutePositioner();
-  vTaskDelete(m_mouseUpdateTask);
-  vQueueDelete(m_receivedPacket);
+  if (m_mouseUpdateTask)
+    vTaskDelete(m_mouseUpdateTask);
+  if (m_receivedPacket)
+    vQueueDelete(m_receivedPacket);
 }
 
 
@@ -68,14 +72,14 @@ void Mouse::begin(int PS2Port)
   reset();
   m_receivedPacket = xQueueCreate(1, sizeof(MousePacket));
   xTaskCreate(&mouseUpdateTask, "", 1600, this, 5, &m_mouseUpdateTask);
+  m_area = Size(0, 0);
 }
 
 
 void Mouse::begin(gpio_num_t clkGPIO, gpio_num_t dataGPIO)
 {
-  PS2Controller * PS2 = PS2Controller::instance();
-  PS2->begin(clkGPIO, dataGPIO);
-  PS2->setMouse(this);
+  PS2Controller::begin(clkGPIO, dataGPIO);
+  PS2Controller::setMouse(this);
   begin(0);
 }
 
@@ -92,6 +96,8 @@ bool Mouse::reset()
         break;
       vTaskDelay(500 / portTICK_PERIOD_MS);
     }
+    // give the time to the device to be fully initialized
+    vTaskDelay(200 / portTICK_PERIOD_MS);
   }
 
   // negotiate compatibility and default parameters
@@ -183,9 +189,11 @@ bool Mouse::getNextDelta(MouseDelta * delta, int timeOutMS, bool requestResendOn
 
 void Mouse::setupAbsolutePositioner(int width, int height, bool createAbsolutePositionsQueue, BitmappedDisplayController * updateDisplayController, uiApp * app)
 {
-  m_area                  = Size(width, height);
-  m_status.X              = width >> 1;
-  m_status.Y              = height >> 1;
+  if (m_area != Size(width, height)) {
+    m_area                  = Size(width, height);
+    m_status.X              = width >> 1;
+    m_status.Y              = height >> 1;
+  }
   m_status.wheelDelta     = 0;
   m_status.buttons.left   = 0;
   m_status.buttons.middle = 0;
@@ -211,13 +219,13 @@ void Mouse::setupAbsolutePositioner(int width, int height, bool createAbsolutePo
 
 void Mouse::terminateAbsolutePositioner()
 {
-  m_absoluteUpdate = false;
-  m_updateDisplayController = nullptr;
-  m_uiApp = nullptr;
   if (m_absoluteQueue) {
     vQueueDelete(m_absoluteQueue);
     m_absoluteQueue = nullptr;
   }
+  m_absoluteUpdate = false;
+  m_updateDisplayController = nullptr;
+  m_uiApp = nullptr;
 }
 
 

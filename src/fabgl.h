@@ -72,22 +72,23 @@
  * - - -
  *
  * Main classes of FabGL library:
- *    * fabgl::VGAController, device driver for VGA bitmapped output.
- *    * fabgl::VGA2Controller, device driver for VGA 2 colors bitmapped output (low RAM requirements, CPU intensive).
- *    * fabgl::VGA4Controller, device driver for VGA 4 colors bitmapped output (low RAM requirements, CPU intensive).
- *    * fabgl::VGA8Controller, device driver for VGA 8 colors bitmapped output (low RAM requirements, CPU intensive).
- *    * fabgl::VGA16Controller, device driver for VGA 16 colors bitmapped output (low RAM requirements, CPU intensive).
- *    * fabgl::VGATextController, device driver for VGA textual output (low RAM requirements, CPU intensive).
- *    * fabgl::SSD1306Controller, device driver for SSD1306 based OLED displays.
- *    * fabgl::ST7789Controller, device driver for ST7789 based TFT displays.
- *    * fabgl::ILI9341Controller, device driver for ILI9341 based TFT displays.
- *    * fabgl::Canvas, that provides a set of drawing primitives (lines, rectangles, text...).
- *    * fabgl::Terminal, that emulates an ANSI/VT100/VT102/etc and up terminal (look at @ref vttest "vttest score").
- *    * fabgl::Keyboard, that controls a PS2 keyboard and translates scancodes to virtual keys or ASCII/ANSI codes.
- *    * fabgl::Mouse, that controls a PS2 mouse.
- *    * fabgl::Scene abstract class that handles sprites, timings and collision detection.
+ *    * fabgl::VGAController, device driver for VGA bitmapped output
+ *    * fabgl::VGA2Controller, device driver for VGA 2 colors bitmapped output (low RAM requirements, CPU intensive)
+ *    * fabgl::VGA4Controller, device driver for VGA 4 colors bitmapped output (low RAM requirements, CPU intensive)
+ *    * fabgl::VGA8Controller, device driver for VGA 8 colors bitmapped output (low RAM requirements, CPU intensive)
+ *    * fabgl::VGA16Controller, device driver for VGA 16 colors bitmapped output (low RAM requirements, CPU intensive)
+ *    * fabgl::VGATextController, device driver for VGA textual output (low RAM requirements, CPU intensive)
+ *    * fabgl::SSD1306Controller, device driver for SSD1306 based OLED displays
+ *    * fabgl::ST7789Controller, device driver for ST7789 based TFT displays
+ *    * fabgl::ILI9341Controller, device driver for ILI9341 based TFT displays
+ *    * fabgl::Canvas, that provides a set of drawing primitives (lines, rectangles, text...)
+ *    * fabgl::Terminal, that emulates an ANSI/VT100/VT102/etc and up terminal (look at @ref vttest "vttest score")
+ *    * fabgl::Keyboard, that controls a PS2 keyboard and translates scancodes to virtual keys or ASCII/ANSI codes
+ *    * fabgl::Mouse, that controls a PS2 mouse
+ *    * fabgl::Scene abstract class that handles sprites, timings and collision detection
  *    * fabgl::uiApp base class to build Graphical User Interface applications
- *    * fabgl::SoundGenerator to generate sound and music.
+ *    * fabgl::SoundGenerator to generate sound and music
+ *    * fabgl::InputBox to generate simple UI wizards
  *
  * Devices emulation classes:
  *    * fabgl::Z80, Zilog Z80 CPU emulator
@@ -98,6 +99,7 @@
  * Other classes:
  *    * fabgl::I2C, thread safe I2C (Wire) class
  *    * fabgl::DS3231, Real Time Clock driver which uses the thread safe fabgl::I2C library
+ *    * fabgl::MCP23S17, 16 bit SPI port expander
  *
  * See @ref confVGA "VGA output" for VGA connection sample schema.
  *
@@ -259,6 +261,7 @@
  * @example VGA/SpaceInvaders/SpaceInvaders.ino Space invaders full game
  * @example VGA/Sprites/Sprites.ino Simple sprites animation
  * @example VGA/VIC20/VIC20.ino Commodore VIC20 Emulator
+ * @example VGA/InputBox/InputBox.ino InputBox UI wizard
  *
  * @example SSD1306_OLED/128x32/CollisionDetection/CollisionDetection.ino fabgl::Scene, sprites and collision detection example
  * @example SSD1306_OLED/128x32/SimpleTerminalOut/SimpleTerminalOut.ino Simple terminal - output only
@@ -299,6 +302,8 @@
 #include "dispdrivers/vga8controller.h"
 #include "dispdrivers/vga16controller.h"
 #include "dispdrivers/vgadirectcontroller.h"
+#include "fabui.h"
+#include "inputbox.h"
 #include "comdrivers/ps2controller.h"
 #include "comdrivers/tsi2c.h"
 #include "devdrivers/keyboard.h"
@@ -358,6 +363,7 @@ using fabgl::uiSliderStyle;
 using fabgl::uiColorListBox;
 using fabgl::uiColorBox;
 using fabgl::uiColorComboBox;
+using fabgl::uiProgressBar;
 using fabgl::SoundGenerator;
 using fabgl::uiMessageBoxResult;
 using fabgl::SineWaveformGenerator;
@@ -395,5 +401,7 @@ using fabgl::CharStyle;
 using fabgl::TerminalTransition;
 using fabgl::SupportedLayouts;
 using fabgl::CoreUsage;
+using fabgl::InputResult;
+using fabgl::InputBox;
 
 

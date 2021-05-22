@@ -34,6 +34,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include <list>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "freertos/timers.h"
@@ -75,6 +77,7 @@
           *uiSlider
           uiSpinButton
           *uiColorBox
+          *uiProgressBar
 
 */
 
@@ -86,6 +89,9 @@ namespace fabgl {
 // increase in case of garbage between windows!
 #define FABGLIB_UI_EVENTS_QUEUE_SIZE 256
 
+
+using std::list;
+using std::pair;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -237,10 +243,11 @@ struct uiObjectType {
   uint32_t uiCustomComboBox    : 1;
   uint32_t uiColorBox          : 1;
   uint32_t uiColorComboBox     : 1;
+  uint32_t uiProgressBar       : 1;
 
   uiObjectType() : uiApp(0), uiEvtHandler(0), uiWindow(0), uiFrame(0), uiControl(0), uiScrollableControl(0), uiButton(0), uiTextEdit(0),
                    uiLabel(0), uiImage(0), uiPanel(0), uiPaintBox(0), uiCustomListBox(0), uiListBox(0), uiFileBrowser(0), uiComboBox(0),
-                   uiCheckBox(0), uiSlider(0), uiColorListBox(0), uiCustomComboBox(0), uiColorBox(0), uiColorComboBox(0)
+                   uiCheckBox(0), uiSlider(0), uiColorListBox(0), uiCustomComboBox(0), uiColorBox(0), uiColorComboBox(0), uiProgressBar(0)
     { }
 };
 
@@ -1745,6 +1752,21 @@ struct uiListBoxStyle {
 };
 
 
+/**
+ * @brief Properties of the list box
+ */
+struct uiListBoxProps {
+  uint8_t allowMultiSelect  : 1;   /**< If True the listbox allows to select multiple items */
+  uint8_t selectOnMouseOver : 1;   /**< If True an item is selected when the mouse is over it */
+
+  uiListBoxProps()
+    : allowMultiSelect(true),
+      selectOnMouseOver(false)
+    {
+    }
+};
+
+
 /** @brief Shows generic a list of selectable items */
 class uiCustomListBox : public uiScrollableControl {
 
@@ -1771,6 +1793,13 @@ public:
    * @return L-value representing listbox style
    */
   uiListBoxStyle & listBoxStyle() { return m_listBoxStyle; }
+
+  /**
+   * @brief Sets or gets list box properties
+   *
+   * @return L-value representing some list box properties
+   */
+  uiListBoxProps & listBoxProps() { return m_listBoxProps; }
 
   /**
    * @brief Gets the first selected item
@@ -1836,12 +1865,14 @@ private:
 
   void paintListBox();
   int getItemAtMousePos(int mouseX, int mouseY);
-  void handleMouseDown(int mouseX, int mouseY);
+  void mouseDownSelect(int mouseX, int mouseY);
+  void mouseMoveSelect(int mouseX, int mouseY);
   void handleKeyDown(uiKeyEventInfo key);
   void makeItemVisible(int index);
 
 
   uiListBoxStyle m_listBoxStyle;
+  uiListBoxProps m_listBoxProps;
   int            m_firstVisibleItem;     // the item on the top
 };
 
@@ -1849,6 +1880,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // uiListBox
+
 
 /** @brief Shows a list of selectable string items */
 class uiListBox : public uiCustomListBox {
@@ -1874,7 +1906,7 @@ public:
    *
    * @return L-value representing listbox items
    */
-  StringList & items() { return m_items; }
+  StringList & items()                              { return m_items; }
 
 protected:
 
@@ -2499,6 +2531,85 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+// uiProgressBar
+
+
+/** @brief Contains the progress bar style */
+struct uiProgressBarStyle {
+  RGB888           backgroundColor = RGB888(128, 128, 128);   /**< Progress bar background color */
+  RGB888           foregroundColor = RGB888(64, 128, 64);     /**< Progress bar foreground color */
+  FontInfo const * textFont        = &FONT_std_14;            /**< Text font */
+  RGB888           textColor       = RGB888(255, 255, 255);   /**< Text color */
+};
+
+
+/** @brief Properties of the progress bar */
+struct uiProgressBarProps {
+  uint8_t showPercentage : 1;   /**< If True percentage value is shown */
+
+  uiProgressBarProps()
+    : showPercentage(true)
+    {
+    }
+};
+
+
+/** @brief A progress bar shows progress percentage using a colored bar */
+class uiProgressBar : public uiControl {
+
+public:
+
+  /**
+   * @brief Creates an instance of the object
+   *
+   * @param parent The parent window. A progress bar must always have a parent window
+   * @param pos Top-left coordinates of the progress bar relative to the parent
+   * @param size The progress bar size
+   * @param visible If true the progress bar is immediately visible
+   * @param styleClassID Optional style class identifier
+   */
+  uiProgressBar(uiWindow * parent, const Point & pos, const Size & size, bool visible = true, uint32_t styleClassID = 0);
+
+  virtual ~uiProgressBar();
+
+  virtual void processEvent(uiEvent * event);
+
+  /**
+   * @brief Sets or gets progress bar style
+   *
+   * @return L-value representing progress bar style
+   */
+  uiProgressBarStyle & progressBarStyle() { return m_progressBarStyle; }
+
+  /**
+   * @brief Sets or gets progress bar properties
+   *
+   * @return L-value representing some progress bar properties
+   */
+  uiProgressBarProps & progressBarProps() { return m_progressBarProps; }
+
+  /**
+   * @brief Sets percentage
+   *
+   * @param value Percentage to show (0..100)
+   */
+  void setPercentage(int value);
+
+
+private:
+
+  void paintProgressBar();
+
+
+  uiProgressBarStyle   m_progressBarStyle;
+  uiProgressBarProps   m_progressBarProps;
+
+  int                  m_percentage;
+};
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // uiStyle
 
 struct uiStyle {
@@ -2549,6 +2660,9 @@ struct ModalWindowState {
   uiWindow * prevModal;
   int        modalResult;
 };
+
+
+typedef pair<uiEvtHandler *, TimerHandle_t> uiTimerAssoc;
 
 
 class Keyboard;
@@ -2869,6 +2983,8 @@ public:
    */
   void killTimer(uiTimerHandle handle);
 
+  void killEvtHandlerTimers(uiEvtHandler * dest);
+
   /**
    * @brief Sets or gets application properties
    *
@@ -2935,14 +3051,29 @@ public:
    *
    * @param value Style class descriptor
    */
-  void setStyle(uiStyle * value)           { m_style = value; }
+  void setStyle(uiStyle * value)                   { m_style = value; }
 
   /**
    * @brief Gets current application controls style
    *
    * @return Current style (nullptr = default).
    */
-  uiStyle * style()                        { return m_style; }
+  uiStyle * style()                                { return m_style; }
+
+  Keyboard * keyboard()                            { return m_keyboard; }
+
+  Mouse * mouse()                                  { return m_mouse; }
+
+  BitmappedDisplayController * displayController() { return m_displayController; }
+
+  Canvas * canvas()                                { return m_canvas; }
+
+  /**
+   * @brief Returns time when last user action (mouse/keyboard) has been received, measured in milliseconds since boot
+   *
+   * @return Time in milliseconds
+   */
+  int lastUserActionTime()                         { return m_lastUserActionTimeMS; }
 
 
   // delegates
@@ -2954,14 +3085,6 @@ public:
    * To create a timer use uiApp.setTimer().
    */
   Delegate<uiTimerHandle> onTimer;
-
-  Keyboard * keyboard() { return m_keyboard; }
-
-  Mouse * mouse() { return m_mouse; }
-
-  BitmappedDisplayController * displayController() { return m_displayController; }
-
-  Canvas * canvas() { return m_canvas; }
 
 
 protected:
@@ -3020,6 +3143,11 @@ private:
   Point           m_lastMouseUpPos;      // screen position of last mouse up
 
   uiStyle *       m_style;
+
+  int             m_lastUserActionTimeMS; // time when last user action (mouse/keyboard) has been received, measured in milliseconds since boot
+
+  // associates event handler with FreeRTOS timer
+  list<uiTimerAssoc> m_timers;
 };
 
 

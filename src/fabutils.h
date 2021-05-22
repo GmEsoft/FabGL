@@ -195,6 +195,8 @@ struct Size {
 
   Size() : width(0), height(0) { }
   Size(int width_, int height_) : width(width_), height(height_) { }
+  bool operator==(Size const & r) { return width == r.width && height == r.height; }
+  bool operator!=(Size const & r) { return width != r.width || height != r.height; }
 } __attribute__ ((packed));
 
 
@@ -357,16 +359,34 @@ private:
 template <typename ...Params>
 struct Delegate {
 
+  // empty constructor
+  Delegate() : m_func(nullptr) {
+  }
+
+  // denied copy
+  Delegate(const Delegate & c) = delete;
+
+  // construct from lambda
   template <typename Func>
-  void operator=(Func f) {
-    m_closure = [] (void * func, const Params & ...params) -> void { (*(Func *)func)(params...); };
-    m_func = heap_caps_malloc(sizeof(Func), MALLOC_CAP_32BIT | MALLOC_CAP_INTERNAL);
-    moveItems<uint32_t*>((uint32_t*)m_func, (uint32_t*)&f, sizeof(Func) / sizeof(uint32_t));
+  Delegate(Func f) : Delegate() {
+    *this = f;
   }
 
   ~Delegate() {
-    heap_caps_free(m_func);
+    cleanUp();
   }
+
+  // assignment operator from Func
+  template <typename Func>
+  void operator=(Func f) {
+    cleanUp();
+    m_closure  = [] (void * func, const Params & ...params) -> void { (*(Func *)func)(params...); };
+    m_func     = heap_caps_malloc(sizeof(Func), MALLOC_CAP_32BIT | MALLOC_CAP_INTERNAL);
+    moveItems<uint32_t*>((uint32_t*)m_func, (uint32_t*)&f, sizeof(Func) / sizeof(uint32_t));
+  }
+
+  // denied assignment from Delegate
+  void operator=(const Delegate&) = delete;
 
   void operator()(const Params & ...params) {
     if (m_func)
@@ -374,8 +394,14 @@ struct Delegate {
   }
 
 private:
+
   void (*m_closure)(void * func, const Params & ...params);
-  void * m_func = nullptr;
+  void * m_func;
+
+  void cleanUp() {
+    if (m_func)
+      heap_caps_free(m_func);
+  }
 };
 
 
@@ -391,6 +417,7 @@ public:
   int append(char const * str);
   int appendFmt(const char *format, ...);
   void append(char const * strlist[], int count);
+  void appendSepList(char const * strlist, char separator);
   void insert(int index, char const * str);
   void set(int index, char const * str);
   void remove(int index);
@@ -401,7 +428,9 @@ public:
   void select(int index, bool value);
   void deselectAll();
   bool selected(int index);
+  int getFirstSelected();
   void copyFrom(StringList const & src);
+  void copySelectionMapFrom(StringList const & src);
 
 private:
   void checkAllocatedSpace(int requiredItems);

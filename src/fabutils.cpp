@@ -439,6 +439,14 @@ void StringList::copyFrom(StringList const & src)
 }
 
 
+void StringList::copySelectionMapFrom(StringList const & src)
+{
+  int maskLen = (31 + m_allocated) / 32;
+  for (int i = 0; i < maskLen; ++i)
+    m_selMap[i] = src.m_selMap[i];
+}
+
+
 void StringList::checkAllocatedSpace(int requiredItems)
 {
   if (m_allocated < requiredItems) {
@@ -499,6 +507,27 @@ void StringList::append(char const * strlist[], int count)
 }
 
 
+// separator cannot be "0"
+void StringList::appendSepList(char const * strlist, char separator)
+{
+  if (strlist) {
+    takeStrings();
+    char const * start = strlist;
+    while (*start) {
+      auto end = strchr(start, separator);
+      if (!end)
+        end = strchr(start, 0);
+      int len = end - start;
+      char str[len + 1];
+      memcpy(str, start, len);
+      str[len] = 0;
+      insert(m_count, str);
+      start += len + (*end == 0 ? 0 : 1);
+    }
+  }
+}
+
+
 void StringList::set(int index, char const * str)
 {
   if (m_ownStrings) {
@@ -545,6 +574,16 @@ void StringList::deselectAll()
 bool StringList::selected(int index)
 {
   return m_selMap[index / 32] & (1 << (index % 32));
+}
+
+
+// -1 = no items selected
+int StringList::getFirstSelected()
+{
+  for (int i = 0; i < m_count; ++i)
+    if (selected(i))
+      return i;
+  return -1;
 }
 
 
@@ -1119,10 +1158,14 @@ bool FileBrowser::format(DriveType driveType, int drive)
 bool FileBrowser::mountSDCard(bool formatOnFail, char const * mountPath, size_t maxFiles, int allocationUnitSize, int MISO, int MOSI, int CLK, int CS)
 {
   switch (getChipPackage()) {
-    case ChipPackage::ESP32D0WDQ5:
     case ChipPackage::ESP32PICOD4:
       MISO = 2;
       MOSI = 12;
+      break;
+    case ChipPackage::ESP32D0WDQ5:
+      MISO = 35;
+      MOSI = 12;
+      break;
     default:
       break;
   }
