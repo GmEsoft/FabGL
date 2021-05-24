@@ -112,6 +112,9 @@
  * <CENTER> Installation Tutorial </CENTER>
  * @htmlonly <div align="center"> <iframe width="560" height="349" src="http://www.youtube.com/embed/8OTaPQlSTas?rel=0&loop=1&autoplay=1&modestbranding=1" frameborder="0" allowfullscreen align="middle"> </iframe> </div> @endhtmlonly
  * - - -
+ * <CENTER> @link VGA/PCEmulator/PCEmulator.ino IBM PC Emulator Example @endlink </CENTER>
+ * @htmlonly <div align="center"> <iframe width="560" height="349" src="http://www.youtube.com/embed/3I1U2nEoxIQ?rel=0&loop=1&autoplay=1&modestbranding=1" frameborder="0" allowfullscreen align="middle"> </iframe> </div> @endhtmlonly
+ * - - -
  * <CENTER> @link VGA/SpaceInvaders/SpaceInvaders.ino Space Invaders Example @endlink </CENTER>
  * @htmlonly <div align="center"> <iframe width="560" height="349" src="http://www.youtube.com/embed/LL8J7tjxeXA?rel=0&loop=1&autoplay=1&modestbranding=1" frameborder="0" allowfullscreen align="middle"> </iframe> </div> @endhtmlonly
  * - - -
@@ -147,6 +150,9 @@
  * - - -
  * <CENTER> @link VGA/CollisionDetection/CollisionDetection.ino Collision Detection Example @endlink </CENTER>
  * @htmlonly <div align="center"> <iframe width="560" height="349" src="http://www.youtube.com/embed/q3OPSq4HhDE?rel=0&loop=1&autoplay=1&modestbranding=1" frameborder="0" allowfullscreen align="middle"> </iframe> </div> @endhtmlonly
+ * - - -
+ * <CENTER> @link VGA/MultitaskingCPM/MultitaskingCPM.ino Multitasking CP/M Plus Example @endlink </CENTER>
+ * @htmlonly <div align="center"> <iframe width="560" height="349" src="http://www.youtube.com/embed/3UevsxMQZ5w?rel=0&loop=1&autoplay=1&modestbranding=1" frameborder="0" allowfullscreen align="middle"> </iframe> </div> @endhtmlonly
  * - - -
  *
  * Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com> <br>
@@ -255,6 +261,7 @@
  * @example VGA/MouseOnScreen/MouseOnScreen.ino PS/2 mouse and mouse pointer on screen
  * @example VGA/MultitaskingCPM/MultitaskingCPM.ino Multitasking - Multisession CP/M 3 compatible system. Supports directories and FAT32 file system with SD Cards.
  * @example VGA/NetworkTerminal/NetworkTerminal.ino Network VT/ANSI Terminal
+ * @example VGA/PCEmulator/PCEmulator.ino A i8086 based IBM PC emulator (runs FreeDOS, MS-DOS, CPM86, Linux-ELK, Windows 3.0)
  * @example VGA/SimpleTerminalOut/SimpleTerminalOut.ino Simple terminal - output only
  * @example VGA/SimpleTextTerminalOut/SimpleTextTerminalOut.ino Simple terminal text-only mode - output only
  * @example VGA/Songs/Songs.ino Music and sound demo, from Carles Oriol
@@ -284,7 +291,7 @@
 
 
 /*!
-    \defgroup Enumerations
+    \defgroup Enumerations Enumerations
         Enumeration types
 */
 
