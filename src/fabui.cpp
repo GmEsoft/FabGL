@@ -107,7 +107,7 @@ void dumpEvent(uiEvent * event)
   }
   Serial.write("\n");
 }
-//*/
+*/
 
 
 
@@ -143,6 +143,8 @@ uiEvtHandler::uiEvtHandler(uiApp * app)
 
 uiEvtHandler::~uiEvtHandler()
 {
+  if (m_app)
+    m_app->killEvtHandlerTimers(this);
 }
 
 
@@ -235,6 +237,8 @@ int uiApp::run(BitmappedDisplayController * displayController, Keyboard * keyboa
   // avoid slow paint on low resolutions
   m_displayController->enableBackgroundPrimitiveTimeout(false);
 
+  m_lastUserActionTimeMS = esp_timer_get_time() / 1000;
+
   showWindow(m_rootWindow, true);
 
   m_activeWindow = m_rootWindow;
@@ -264,6 +268,8 @@ int uiApp::run(BitmappedDisplayController * displayController, Keyboard * keyboa
       }
     }
   }
+
+  killEvtHandlerTimers(this);
 
   showCaret(nullptr);
 
@@ -412,6 +418,8 @@ void uiApp::preprocessMouseEvent(uiEvent * event)
       getEvent(event, -1);
   }
 
+  m_lastUserActionTimeMS = esp_timer_get_time() / 1000;
+
   Point mousePos = Point(event->params.mouse.status.X, event->params.mouse.status.Y);
 
   // search for window under the mouse or mouse capturing window
@@ -469,6 +477,8 @@ void uiApp::preprocessMouseEvent(uiEvent * event)
 
 void uiApp::preprocessKeyboardEvent(uiEvent * event)
 {
+  m_lastUserActionTimeMS = esp_timer_get_time() / 1000;
+
   // keyboard events go to focused window
   if (m_focusedWindow) {
     event->dest = m_focusedWindow;
@@ -834,6 +844,7 @@ void uiApp::timerFunc(TimerHandle_t xTimer)
 uiTimerHandle uiApp::setTimer(uiEvtHandler * dest, int periodMS)
 {
   TimerHandle_t h = xTimerCreate("", pdMS_TO_TICKS(periodMS), pdTRUE, dest, &uiApp::timerFunc);
+  m_timers.push_back(uiTimerAssoc(dest, h));
   xTimerStart(h, 0);
   return h;
 }
@@ -841,7 +852,21 @@ uiTimerHandle uiApp::setTimer(uiEvtHandler * dest, int periodMS)
 
 void uiApp::killTimer(uiTimerHandle handle)
 {
+  auto dest = (uiEvtHandler *) pvTimerGetTimerID(handle);
+  m_timers.remove(uiTimerAssoc(dest, handle));
+  xTimerStop(handle, portMAX_DELAY);
   xTimerDelete(handle, portMAX_DELAY);
+}
+
+
+void uiApp::killEvtHandlerTimers(uiEvtHandler * dest)
+{
+  for (auto t : m_timers)
+    if (t.first == dest) {
+      xTimerStop(t.second, portMAX_DELAY);
+      xTimerDelete(t.second, portMAX_DELAY);
+    }
+  m_timers.remove_if([&](uiTimerAssoc const & p) { return p.first == dest; });
 }
 
 

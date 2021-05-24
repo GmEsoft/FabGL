@@ -109,15 +109,20 @@ bool Keyboard::reset()
   // sets default layout
   setLayout(&USLayout);
 
+  // 350ms keyboard poweron delay (look at NXP M68HC08 designer reference manual)
+  vTaskDelay(350 / portTICK_PERIOD_MS);
+
   // tries up to three times to reset keyboard
   for (int i = 0; i < 3; ++i) {
-    m_keyboardAvailable = send_cmdReset() && send_cmdSetScancodeSet(2);
+    m_keyboardAvailable = send_cmdReset();
     if (m_keyboardAvailable)
       break;
-    vTaskDelay(500 / portTICK_PERIOD_MS);
+    vTaskDelay(350 / portTICK_PERIOD_MS);
   }
   // give the time to the device to be fully initialized
   vTaskDelay(200 / portTICK_PERIOD_MS);
+
+  send_cmdSetScancodeSet(2);
 
   return m_keyboardAvailable;
 }

@@ -34,6 +34,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include <list>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "freertos/timers.h"
@@ -87,6 +89,9 @@ namespace fabgl {
 // increase in case of garbage between windows!
 #define FABGLIB_UI_EVENTS_QUEUE_SIZE 256
 
+
+using std::list;
+using std::pair;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -763,20 +768,23 @@ struct uiFrameProps {
 };
 
 
+/** \ingroup Enumerations
+ * @brief
+ */
 enum class uiFrameItem : uint8_t {
-  None,
-  MoveArea,
-  TopLeftResize,
-  TopCenterResize,
-  TopRightResize,
-  CenterLeftResize,
-  CenterRightResize,
-  BottomLeftResize,
-  BottomCenterResize,
-  BottomRightResize,
-  CloseButton,
-  MaximizeButton,
-  MinimizeButton,
+  None,                 /**<     */
+  MoveArea,             /**<     */
+  TopLeftResize,        /**<     */
+  TopCenterResize,      /**<     */
+  TopRightResize,       /**<     */
+  CenterLeftResize,     /**<     */
+  CenterRightResize,    /**<     */
+  BottomLeftResize,     /**<     */
+  BottomCenterResize,   /**<     */
+  BottomRightResize,    /**<     */
+  CloseButton,          /**<     */
+  MaximizeButton,       /**<     */
+  MinimizeButton,       /**<     */
 };
 
 
@@ -978,18 +986,21 @@ struct uiScrollableControlStyle {
 };
 
 
+/** \ingroup Enumerations
+ * @brief
+ */
 enum class uiScrollBarItem {
-  None,
-  LeftButton,
-  RightButton,
-  TopButton,
-  BottomButton,
-  HBar,
-  VBar,
-  PageUp,
-  PageDown,
-  PageLeft,
-  PageRight,
+  None,           /**<     */
+  LeftButton,     /**<     */
+  RightButton,    /**<     */
+  TopButton,      /**<     */
+  BottomButton,   /**<     */
+  HBar,           /**<     */
+  VBar,           /**<     */
+  PageUp,         /**<     */
+  PageDown,       /**<     */
+  PageLeft,       /**<     */
+  PageRight,      /**<     */
 };
 
 
@@ -2657,6 +2668,9 @@ struct ModalWindowState {
 };
 
 
+typedef pair<uiEvtHandler *, TimerHandle_t> uiTimerAssoc;
+
+
 class Keyboard;
 class Mouse;
 
@@ -2975,6 +2989,8 @@ public:
    */
   void killTimer(uiTimerHandle handle);
 
+  void killEvtHandlerTimers(uiEvtHandler * dest);
+
   /**
    * @brief Sets or gets application properties
    *
@@ -3041,14 +3057,29 @@ public:
    *
    * @param value Style class descriptor
    */
-  void setStyle(uiStyle * value)           { m_style = value; }
+  void setStyle(uiStyle * value)                   { m_style = value; }
 
   /**
    * @brief Gets current application controls style
    *
    * @return Current style (nullptr = default).
    */
-  uiStyle * style()                        { return m_style; }
+  uiStyle * style()                                { return m_style; }
+
+  Keyboard * keyboard()                            { return m_keyboard; }
+
+  Mouse * mouse()                                  { return m_mouse; }
+
+  BitmappedDisplayController * displayController() { return m_displayController; }
+
+  Canvas * canvas()                                { return m_canvas; }
+
+  /**
+   * @brief Returns time when last user action (mouse/keyboard) has been received, measured in milliseconds since boot
+   *
+   * @return Time in milliseconds
+   */
+  int lastUserActionTime()                         { return m_lastUserActionTimeMS; }
 
 
   // delegates
@@ -3060,14 +3091,6 @@ public:
    * To create a timer use uiApp.setTimer().
    */
   Delegate<uiTimerHandle> onTimer;
-
-  Keyboard * keyboard() { return m_keyboard; }
-
-  Mouse * mouse() { return m_mouse; }
-
-  BitmappedDisplayController * displayController() { return m_displayController; }
-
-  Canvas * canvas() { return m_canvas; }
 
 
 protected:
@@ -3126,6 +3149,11 @@ private:
   Point           m_lastMouseUpPos;      // screen position of last mouse up
 
   uiStyle *       m_style;
+
+  int             m_lastUserActionTimeMS; // time when last user action (mouse/keyboard) has been received, measured in milliseconds since boot
+
+  // associates event handler with FreeRTOS timer
+  list<uiTimerAssoc> m_timers;
 };
 
 
