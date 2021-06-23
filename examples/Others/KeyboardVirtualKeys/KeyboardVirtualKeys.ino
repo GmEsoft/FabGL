@@ -62,6 +62,7 @@ void printHelp()
   xprintf("Commands:\r\n");
   xprintf("  1 = US Layout       2 = UK Layout       3 = DE Layout\r\n");
   xprintf("  4 = IT Layout       5 = ES Layout       6 = FR Layout\r\n");
+  xprintf("  7 = BE Layout\r\n");
   xprintf("  r = Reset\r\n");
   xprintf("  q = Scancode set 1  w = Scancode set 2\r\n");
   xprintf("  l = Test LEDs\r\n");
@@ -163,6 +164,10 @@ void loop()
         break;
       case '6':
         keyboard->setLayout(&fabgl::FrenchLayout);
+        printInfo();
+        break;
+      case '7':
+        keyboard->setLayout(&fabgl::BelgianLayout);
         printInfo();
         break;
       case 'r':
