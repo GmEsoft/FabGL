@@ -3,7 +3,14 @@
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+  This library and related software is available under GPL v3 or commercial license. It is always free for students, hobbyists, professors and researchers.
+  It is not-free if embedded as firmware in commercial boards.
+
+
+* Contact for commercial license: fdivitto2013@gmail.com
+
+
+* GPL license version 3, for non-commercial use:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -1015,7 +1022,7 @@ char * FileBrowser::createTempFilename()
     for (int i = 0; i < FLEN; ++i)
       name[i] = 65 + (rand() % 26);
     sprintf(ret, "%s/%s.TMP", m_dir, name);
-    if (!exists(name))
+    if (!exists(name, false))
       return ret;
   }
 }

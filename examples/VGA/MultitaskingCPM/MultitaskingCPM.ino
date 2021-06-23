@@ -1,9 +1,16 @@
 /*
-  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
+  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+  This library and related software is available under GPL v3 or commercial license. It is always free for students, hobbyists, professors and researchers.
+  It is not-free if embedded as firmware in commercial boards.
+
+
+* Contact for commercial license: fdivitto2013@gmail.com
+
+
+* GPL license version 3, for non-commercial use:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -50,8 +57,8 @@
 
 // globals
 
-//fabgl::VGA16Controller   DisplayController;
-fabgl::VGATextController DisplayController;
+fabgl::VGA16Controller   DisplayController;
+//fabgl::VGATextController DisplayController;
 fabgl::PS2Controller     PS2Controller;
 
 Supervisor supervisor(&DisplayController);
@@ -114,7 +121,7 @@ void setup()
   FileBrowser fb;
 
   fb.setDirectory(basepath);
-  if (!fb.exists("driveA")) {
+  if (!fb.exists("driveA", false)) {
 
     fb.makeDirectory("driveA");
 
@@ -124,7 +131,7 @@ void setup()
       term->flush();
       // check directory
       fb.setDirectory(driveA_path.c_str());
-      if (!fb.exists(programs[i].path))
+      if (!fb.exists(programs[i].path, false))
         fb.makeDirectory(programs[i].path);
       fb.changeDirectory(programs[i].path);
       // copy file
@@ -140,7 +147,7 @@ void setup()
   }
 
   fb.setDirectory(basepath);
-  if (!fb.exists("driveB"))
+  if (!fb.exists("driveB", false))
     fb.makeDirectory("driveB");
 
   delete term;

@@ -1,9 +1,16 @@
 /*
-  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
+  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+  This library and related software is available under GPL v3 or commercial license. It is always free for students, hobbyists, professors and researchers.
+  It is not-free if embedded as firmware in commercial boards.
+
+
+* Contact for commercial license: fdivitto2013@gmail.com
+
+
+* GPL license version 3, for non-commercial use:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -153,7 +160,7 @@ void copyEmbeddedPrograms()
 {
   auto dir = FileBrowser();
   dir.setDirectory(basepath);
-  if (!dir.exists(EMBDIR)) {
+  if (!dir.exists(EMBDIR, false)) {
     // there isn't a EMBDIR folder, create and populate it
     dir.makeDirectory(EMBDIR);
     dir.changeDirectory(EMBDIR);
@@ -328,7 +335,7 @@ class Menu : public uiApp {
     // programs list
     fileBrowser = new uiFileBrowser(rootWindow(), Point(5, 10), Size(140, 290), true, STYLE_FILEBROWSER);
     fileBrowser->setDirectory(basepath);  // set absolute path
-    fileBrowser->changeDirectory( fileBrowser->content().exists(DOWNDIR) ? DOWNDIR : EMBDIR ); // set relative path
+    fileBrowser->changeDirectory( fileBrowser->content().exists(DOWNDIR, false) ? DOWNDIR : EMBDIR ); // set relative path
     fileBrowser->onChange = [&]() {
       setSelectedProgramConf();
     };
@@ -547,7 +554,7 @@ class Menu : public uiApp {
 
     // setup user directory
     machine->fileBrowser()->setDirectory(basepath);
-    if (!machine->fileBrowser()->exists(USERDIR))
+    if (!machine->fileBrowser()->exists(USERDIR, false))
       machine->fileBrowser()->makeDirectory(USERDIR);
     machine->fileBrowser()->changeDirectory(USERDIR);
 
@@ -781,7 +788,7 @@ class Menu : public uiApp {
   bool downloadURL(char const * URL, char const * filename)
   {
     FileBrowser & dir = fileBrowser->content();
-    if (dir.exists(filename)) {
+    if (dir.exists(filename, false)) {
       return true;
     }
     bool success = false;
