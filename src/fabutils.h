@@ -3,7 +3,14 @@
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+  This library and related software is available under GPL v3 or commercial license. It is always free for students, hobbyists, professors and researchers.
+  It is not-free if embedded as firmware in commercial boards.
+
+
+* Contact for commercial license: fdivitto2013@gmail.com
+
+
+* GPL license version 3, for non-commercial use:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -291,6 +298,7 @@ struct FontInfo {
   //   character width. "chptr" is filled with an array of pointers to the single characters.
   uint8_t const *  data;
   uint32_t const * chptr;  // used only for variable width fonts (FONTINFOFLAGS_VARWIDTH = 1)
+  uint16_t codepage;
 };
 
 
@@ -1192,8 +1200,6 @@ enum VirtualKey {
   VK_UMLAUT_o,        /**< Umlaut 'o': ö */
   VK_UMLAUT_a,        /**< Umlaut 'a': ä */
  
-  // For spanish keyboard layout
-  
   VK_CEDILLA_C,       /**< Cedilla 'C': Ç */
   
   VK_TILDE_n,		      /**< Lower case letter: 'ñ' */
@@ -1242,6 +1248,10 @@ enum VirtualKey {
   VK_CARET_I,		      /**< Caret 'I': Î */
   VK_CARET_O,		      /**< Caret 'O': Ô */
   VK_CARET_U,		      /**< Caret 'U': Û */
+
+  VK_SQUARE,          /**< Square   : '²' */
+  VK_CURRENCY,        /**< Currency : '¤' */
+  VK_MU,              /**< Mu       : 'µ' */
 
   VK_ASCII,           /**< Specifies an ASCII code - used when virtual key is embedded in VirtualKeyItem structure and VirtualKeyItem.ASCII is valid */
   

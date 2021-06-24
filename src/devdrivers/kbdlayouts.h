@@ -3,7 +3,14 @@
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+  This library and related software is available under GPL v3 or commercial license. It is always free for students, hobbyists, professors and researchers.
+  It is not-free if embedded as firmware in commercial boards.
+
+
+* Contact for commercial license: fdivitto2013@gmail.com
+
+
+* GPL license version 3, for non-commercial use:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -104,12 +111,15 @@ extern const KeyboardLayout ItalianLayout;
 /** @brief Spanish keyboard layout */
 extern const KeyboardLayout SpanishLayout;
 
+/** @brief French keyboard layout */
+extern const KeyboardLayout FrenchLayout;
+
 /** @brief Belgian keyboard layout */
 extern const KeyboardLayout BelgianLayout;
 
 
 struct SupportedLayouts {
-  static int count()               { return 6; }
+  static int count()               { return 7; }
   static char const * * names() {
     static char const * NAMES[] =  {
         GermanLayout.desc,
@@ -117,6 +127,7 @@ struct SupportedLayouts {
         UKLayout.desc,
         USLayout.desc,
         SpanishLayout.desc,
+        FrenchLayout.desc,
         BelgianLayout.desc,
     };
     return NAMES;
@@ -128,6 +139,7 @@ struct SupportedLayouts {
         UKLayout.name,
         USLayout.name,
         SpanishLayout.name,
+        FrenchLayout.name,
         BelgianLayout.name,
     };
     return SNAMES;
@@ -139,6 +151,7 @@ struct SupportedLayouts {
         &UKLayout,
         &USLayout,
         &SpanishLayout,
+        &FrenchLayout,
         &BelgianLayout,
     };
     return LAYOUTS;

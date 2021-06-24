@@ -3,7 +3,14 @@
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+  This library and related software is available under GPL v3 or commercial license. It is always free for students, hobbyists, professors and researchers.
+  It is not-free if embedded as firmware in commercial boards.
+
+
+* Contact for commercial license: fdivitto2013@gmail.com
+
+
+* GPL license version 3, for non-commercial use:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -47,17 +54,18 @@ namespace fabgl {
  * @brief A struct which contains a virtual key, key state and associated scan code
  */
 struct VirtualKeyItem {
-  VirtualKey vk;            /**< Virtual key */
-  uint8_t    down;          /**< 0 = up, 1 = down */
-  uint8_t    scancode[8];   /**< Keyboard scancode. Ends with zero if length is <8, otherwise gets the entire length (like PAUSE, which is 8 bytes) */
-  uint8_t    ASCII;         /**< ASCII value (0 = if it isn't possible to translate from virtual key) */
-  uint8_t    CTRL     : 1;  /**< CTRL key state at the time of this virtual key event */
-  uint8_t    LALT     : 1;  /**< LEFT ALT key state at the time of this virtual key event */
-  uint8_t    RALT     : 1;  /**< RIGHT ALT key state at the time of this virtual key event */
-  uint8_t    SHIFT    : 1;  /**< SHIFT key state at the time of this virtual key event */
-  uint8_t    GUI      : 1;  /**< GUI key state at the time of this virtual key event */
-  uint8_t    CAPSLOCK : 1;  /**< CAPSLOCK key state at the time of this virtual key event */
-  uint8_t    NUMLOCK  : 1;  /**< NUMLOCK key state at the time of this virtual key event */
+  VirtualKey vk;              /**< Virtual key */
+  uint8_t    down;            /**< 0 = up, 1 = down */
+  uint8_t    scancode[8];     /**< Keyboard scancode. Ends with zero if length is <8, otherwise gets the entire length (like PAUSE, which is 8 bytes) */
+  uint8_t    ASCII;           /**< ASCII value (0 = if it isn't possible to translate from virtual key) */
+  uint8_t    CTRL       : 1;  /**< CTRL key state at the time of this virtual key event */
+  uint8_t    LALT       : 1;  /**< LEFT ALT key state at the time of this virtual key event */
+  uint8_t    RALT       : 1;  /**< RIGHT ALT key state at the time of this virtual key event */
+  uint8_t    SHIFT      : 1;  /**< SHIFT key state at the time of this virtual key event */
+  uint8_t    GUI        : 1;  /**< GUI key state at the time of this virtual key event */
+  uint8_t    CAPSLOCK   : 1;  /**< CAPSLOCK key state at the time of this virtual key event */
+  uint8_t    NUMLOCK    : 1;  /**< NUMLOCK key state at the time of this virtual key event */
+  uint8_t    SCROLLLOCK : 1;  /**< SCROLLLOCK key state at the time of this virtual key event */
 };
 
 
@@ -72,7 +80,7 @@ struct VirtualKeyItem {
  * The PS2 controller uses ULP coprocessor and RTC slow memory to communicate with the PS2 device.<br>
  * <br>
  * It is possible to specify an international keyboard layout. The default is US-layout.<br>
- * There are three predefined kayboard layouts: US (USA), UK (United Kingdom), DE (German), IT (Italian) and ES (Spanish). Other layout can be added
+ * There are three predefined kayboard layouts: US (USA), UK (United Kingdom), DE (German), IT (Italian), ES (Spanish) and FR (French). Other layout can be added
  * inheriting from US or from any other layout.
  *
  * Applications do not need to create an instance of Keyboard because an instance named Keyboard is created automatically.
@@ -170,7 +178,7 @@ public:
    * @brief Sets keyboard layout.
    *
    * It is possible to specify an international keyboard layout. The default is US-layout.<br>
-   * There are three predefined kayboard layouts: US (USA), UK (United Kingdom), DE (German) and IT (Italian). Other layout can be added
+   * There are following predefined kayboard layouts: US (USA), UK (United Kingdom), DE (German), IT (Italian), ES (Spanish) and FR (French). Other layout can be added
    * inheriting from US or from any other layout.
    *
    * @param layout A pointer to the layout structure.
@@ -273,6 +281,8 @@ public:
    * @return The ASCII code of virtual key or -1 if virtual key cannot be translated to ASCII.
    */
   int virtualKeyToASCII(VirtualKey virtualKey);
+
+  int virtualKeyToASCII(VirtualKeyItem const & item);
 
   /**
    * @brief Gets the number of scancodes available in the queue.
